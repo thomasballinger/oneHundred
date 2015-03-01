@@ -1,5 +1,4 @@
 import sys
-import math
 
 import numpy
 import pygame
@@ -164,12 +163,13 @@ def left_top_coords_of_box(boxx, boxy):
 
 def get_box_at_pixel(board, x, y):
     """Returns board coordinates given pixel coordinates"""
-    for boxx in xrange(BOARD_SIZE):
-        for boxy in xrange(BOARD_SIZE):
-            left, top = left_top_coords_of_box(boxx, boxy)
-            box_rect = pygame.Rect(left, top, SQUARE_SIZE, SQUARE_SIZE)
-            if box_rect.collidepoint(x, y):
-                return(boxx, boxy)
+    rects = (((i, j), pygame.Rect(*left_top_coords_of_box(i, j) +
+                                  (SQUARE_SIZE, SQUARE_SIZE)))
+             for i in xrange(BOARD_SIZE)
+             for j in xrange(BOARD_SIZE))
+    for (boxx, boxy), box_rect in rects:
+        if box_rect.collidepoint(x, y):
+            return(boxx, boxy)
     return(None, None)
 
 
@@ -182,7 +182,7 @@ def manhattan_dist(box1, box2):
     """Returns manhattan distance between two boxes on the board
 
     box1, box2 are tuples of (x, y) coordinates"""
-    return math.fabs(box1[0]-box2[0]) + math.fabs(box1[1]-box2[1])
+    return abs(box1[0]-box2[0]) + abs(box1[1]-box2[1])
 
 
 def next_possible_moves(board):
