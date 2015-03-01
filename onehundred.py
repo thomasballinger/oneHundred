@@ -138,7 +138,7 @@ def which(m, val):
 
 def init_board(dim):
     """initialize board"""
-    return numpy.zeros(shape=(dim, dim), dtype = numpy.int)
+    return numpy.zeros(shape=(dim, dim), dtype=numpy.int)
 
 
 def draw_board(board):
