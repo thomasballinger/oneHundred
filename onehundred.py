@@ -163,8 +163,17 @@ class Game(object):
         self.score = 0
         self.board = init_board(self.board_size)
 
-    def make_move(self, boxx, boxy):
+    def try_make_move(self, boxx, boxy):
         """Try to select a box as a move"""
+        try:
+            self.make_move(boxx, boxy)
+        except ValueError:
+            pass
+
+    def make_move(self, boxx, boxy):
+        """Make a move, or raise ValueError if move is illegal"""
+        if self.board[boxx, boxy] != 0:
+            raise ValueError("Illegal move")
         if self.score == 0:
             self.score += 1
             self.board[boxx, boxy] = self.score
@@ -205,6 +214,9 @@ class Game(object):
     def lost(self):
         return len(self.next_possible_moves()) == 0 and not self.won()
 
+    def __str__(self):
+        return str(self.board)
+
 
 def main():
     board_size = 10
@@ -221,7 +233,7 @@ def main():
         if game.won() or game.lost():
             game.reset()
 
-    display = Display(on_box_click=game.make_move,
+    display = Display(on_box_click=game.try_make_move,
                       on_box_hover=box_color,
                       on_return=reset_if_game_over,
                       background=HACKERSCHOOL,
@@ -277,5 +289,29 @@ def manhattan_dist(box1, box2):
     return abs(box1[0]-box2[0]) + abs(box1[1]-box2[1])
 
 
+def game_with_move(game, x, y):
+    g = Game(game.board_size)
+    g.score = game.score
+    g.board = game.board.copy()
+    g.make_move(x, y)
+    return g
+
+
+def solve(game):
+    """Returns a list of moves which would win, or None if impossible"""
+    if game.won():
+        return []
+    moves = game.next_possible_moves()
+    import random
+    random.shuffle(moves)
+    for move in moves:
+        print game, game.score, move
+        result = solve(game_with_move(game, *move))
+        if result is not None:
+            return [move] + result
+    return None
+
+
 if __name__ == '__main__':
+    print solve(Game(10))
     main()
