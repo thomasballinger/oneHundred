@@ -34,9 +34,9 @@ FPS = 60
 
 class Display(object):
     def __init__(self, on_box_click, on_box_hover, on_return, background,
-                 square_size, board_size, gap, marginx, top_margin,
+                 name, square_size, board_size, gap, marginx, top_margin,
                  bottom_margin):
-        """
+        """Grid display with Pygame, with customizable behavior via callabacks
 
         - on_box_click(x, y) is called when the user clicks a box
         - on_box_hover(x, y) is called when the user hovers over a box,
@@ -48,6 +48,7 @@ class Display(object):
         self.on_return = on_return
 
         self.background = background
+        self.name = name
 
         self.square_size = square_size
         self.board_size = board_size
@@ -74,10 +75,14 @@ class Display(object):
         self.font = pygame.font.Font('freesansbold.ttf', 20)
         self.win = pygame.display.set_mode((self.winwidth, self.winheight))
         self.fps_clock = pygame.time.Clock()
-        pygame.display.set_caption('100')
+        pygame.display.set_caption(self.name)
 
     def render(self, board):
-        """"""
+        """Update display with background image color or EMPTY
+
+        board is a numpy array of ints.
+        Each grid square will be painted EMPTY if board value is 0,
+        else painted with self.background"""
         self.win.fill(BACKGROUND)
         self.draw_board(board)
 
@@ -128,8 +133,8 @@ class Display(object):
 
     def draw_board(self, board):
         """draws board"""
-        for (i, j), contents in spots(board):
-            color = EMPTY if contents == 0 else self.background[i][j]
+        for (i, j), turn in spots(board):
+            color = EMPTY if turn == 0 else self.background[i][j]
             left, top = self.left_top_coords_of_box(i, j)
             pygame.draw.rect(self.win, color, (left, top, self.square_size, self.square_size))
             pygame.draw.rect(self.win, BLACK, (left, top, self.square_size, self.square_size), 1)
@@ -187,6 +192,7 @@ def main():
                       on_box_hover=on_box_hover,
                       on_return=on_return,
                       background=HACKERSCHOOL,
+                      name='100',
                       square_size=30,
                       board_size=board_size,
                       gap=2,
