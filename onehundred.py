@@ -163,25 +163,20 @@ class Game(object):
         self.score = 0
         self.board = init_board(self.board_size)
 
-    def try_make_move(self, boxx, boxy):
-        """Try to select a box as a move"""
-        try:
-            self.make_move(boxx, boxy)
-        except ValueError:
-            pass
-
     def make_move(self, boxx, boxy):
         """Make a move, or raise ValueError if move is illegal"""
         if self.board[boxx, boxy] != 0:
-            raise ValueError("Illegal move")
+            return
         if self.score == 0:
-            self.score += 1
-            self.board[boxx, boxy] = self.score
+            self._make_move(boxx, boxy)
         elif self.board[boxx, boxy] == 0:
-            lastx, lasty = which(self.board, self.score)
             if (boxx, boxy) in self.next_possible_moves():
-                self.score += 1
-                self.board[boxx, boxy] = self.score
+                self._make_move(boxx, boxy)
+
+    def _make_move(self, boxx, boxy):
+        """Make move without checking legality of move"""
+        self.score += 1
+        self.board[boxx, boxy] = self.score
 
     def is_valid(self, boxx, boxy):
         """Returns True if this move would be valid"""
@@ -233,7 +228,7 @@ def main():
         if game.won() or game.lost():
             game.reset()
 
-    display = Display(on_box_click=game.try_make_move,
+    display = Display(on_box_click=game.make_move,
                       on_box_hover=box_color,
                       on_return=reset_if_game_over,
                       background=HACKERSCHOOL,
@@ -296,17 +291,23 @@ def game_with_move(game, x, y):
     g.make_move(x, y)
     return g
 
+tries = 0
+
 
 def solve(game):
     """Returns a list of moves which would win, or None if impossible"""
+    global tries
+    tries += 1
+    if not tries % 10000:
+        print tries
     if game.won():
         return []
     moves = game.next_possible_moves()
-    import random
-    random.shuffle(moves)
     for move in moves:
-        print game, game.score, move
-        result = solve(game_with_move(game, *move))
+        game._make_move(*move)
+        result = solve(game)
+        game.board[move] = 0
+        game.score -= 1
         if result is not None:
             return [move] + result
     return None
