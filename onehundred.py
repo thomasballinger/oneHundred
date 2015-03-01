@@ -284,12 +284,12 @@ def manhattan_dist(box1, box2):
     return abs(box1[0]-box2[0]) + abs(box1[1]-box2[1])
 
 
-def game_with_move(game, x, y):
+def game_copy(game, x, y):
     g = Game(game.board_size)
     g.score = game.score
     g.board = game.board.copy()
-    g.make_move(x, y)
     return g
+
 
 tries = 0
 
@@ -314,5 +314,5 @@ def solve(game):
 
 
 if __name__ == '__main__':
-    print solve(Game(10))
-    main()
+    print solve(Game(5))
+    #main()
