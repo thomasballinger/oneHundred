@@ -118,16 +118,21 @@ def main():
 
 # functions
 
+def spots(m):
+    for i in xrange(m.shape[0]):
+        for j in xrange(m.shape[1]):
+            yield (i, j), m[i, j]
+
+
 def which(m, val):
     """Returns first (i, j) index at where val is found
 
     m is a matrix
     val is a value
     """
-    for i in xrange(m.shape[0]):
-        for j in xrange(m.shape[1]):
-            if m[i, j] == val:
-                return (i, j)
+    for (i, j), contents in spots(m):
+        if contents == val:
+            return (i, j)
     return (None, None)
 
 
@@ -138,15 +143,11 @@ def init_board(dim):
 
 def draw_board(board):
     """draw board"""
-    for i in xrange(board.shape[0]):
-        for j in xrange(board.shape[1]):
-            if board[i, j] == 0:
-                col = EMPTY
-            else:
-                col = cols[j][i]
-            left, top = left_top_coords_of_box(i, j)
-            pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE))
-            pygame.draw.rect(WIN, BLACK, (left, top, SQUARE_SIZE, SQUARE_SIZE), 1)
+    for (i, j), contents in spots(board):
+        col = EMPTY if contents == 0 else contents
+        left, top = left_top_coords_of_box(i, j)
+        pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE))
+        pygame.draw.rect(WIN, BLACK, (left, top, SQUARE_SIZE, SQUARE_SIZE), 1)
     if numpy.amax(board) > 0:
         boxx, boxy = which(board, numpy.amax(board))
         left, top = left_top_coords_of_box(boxx, boxy)
