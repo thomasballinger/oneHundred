@@ -157,40 +157,61 @@ class Game(object):
         self.score = 0
         self.board = init_board(self.board_size)
 
+    def make_move(self, boxx, boxy):
+        """Try to select a box as a move"""
+        if self.score == 0:
+            self.score += 1
+            self.board[boxx, boxy] = self.score
+        elif self.board[boxx, boxy] == 0:
+            lastx, lasty = which(self.board, self.score)
+            if (boxx, boxy) in self.next_possible_moves():
+                self.score += 1
+                self.board[boxx, boxy] = self.score
+
+    def is_valid(self, boxx, boxy):
+        """Returns True if this move would be valid"""
+        if self.score == 0:
+            return True
+        lastx, lasty = which(self.board, self.score)
+        if self.board[boxx, boxy] != 0:
+            return False
+        if (boxx, boxy) in self.next_possible_moves():
+            return True
+        else:
+            return False
+
+    def is_full(self, boxx, boxy):
+        """Returns True if this box is open"""
+        if self.board[boxx, boxy] != 0:
+            return False
+
+    def next_possible_moves(self):
+        boxx, boxy = which(self.board, numpy.amax(self.board))
+        deltas = [(3, 0), (0, 3), (-3, 0), (0, -3),
+                  (-2, 2), (2, 2), (2, -2), (-2, -2)]
+        return [(x, y) for x, y in [(boxx+dx, boxy+dy) for dx, dy in deltas]
+                if x in xrange(self.board.shape[0]) and y in xrange(self.board.shape[1]) and
+                self.board[x, y] == 0]
+
 
 def main():
     board_size = 10
     game = Game(board_size)
 
-    def on_return():
-        if len(next_possible_moves(game.board)) == 0:
-            game.reset()
-            game.score = 0
-
-    def on_box_click(boxx, boxy):
-        if game.score == 0:
-            game.score += 1
-            game.board[boxx, boxy] = game.score
-        elif game.board[boxx, boxy] == 0:
-            lastx, lasty = which(game.board, game.score)
-            if (boxx, boxy) in next_possible_moves(game.board):
-                game.score += 1
-                game.board[boxx, boxy] = game.score
-
-    def on_box_hover(boxx, boxy):
-        if game.score == 0:
-            return GREEN
-        lastx, lasty = which(game.board, game.score)
-        if game.board[boxx, boxy] != 0:
+    def box_color(boxx, boxy):
+        """Returns the highlight color of a box, or None if not highlighted"""
+        if game.is_full(boxx, boxy):
             return None
-        if (boxx, boxy) in next_possible_moves(game.board):
-            return GREEN
-        else:
-            return RED
+        return GREEN if game.is_valid(boxx, boxy) else RED
 
-    display = Display(on_box_click=on_box_click,
-                      on_box_hover=on_box_hover,
-                      on_return=on_return,
+    def reset_if_game_over():
+        """If there are no possible moves, reset the game"""
+        if len(board.next_possible_moves()) == 0:
+            game.reset()
+
+    display = Display(on_box_click=game.make_move,
+                      on_box_hover=box_color,
+                      on_return=reset_if_game_over,
                       background=HACKERSCHOOL,
                       name='100',
                       square_size=30,
@@ -203,7 +224,7 @@ def main():
     while True:
         display.render(game.board)
 
-        if len(next_possible_moves(game.board)) == 0:
+        if len(game.next_possible_moves()) == 0:
             if game.score < 100:
                 display.message('Game over, your score is ' + str(game.score))
             else:
@@ -244,15 +265,6 @@ def manhattan_dist(box1, box2):
 
     box1, box2 are tuples of (x, y) coordinates"""
     return abs(box1[0]-box2[0]) + abs(box1[1]-box2[1])
-
-
-def next_possible_moves(board):
-    boxx, boxy = which(board, numpy.amax(board))
-    deltas = [(3, 0), (0, 3), (-3, 0), (0, -3),
-              (-2, 2), (2, 2), (2, -2), (-2, -2)]
-    return [(x, y) for x, y in [(boxx+dx, boxy+dy) for dx, dy in deltas]
-            if x in xrange(board.shape[0]) and y in xrange(board.shape[1]) and
-            board[x, y] == 0]
 
 
 if __name__ == '__main__':
