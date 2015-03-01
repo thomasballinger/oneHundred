@@ -12,10 +12,10 @@ WINWIDTH = SQUARE_SIZE * BOARD_SIZE + MARGINX * 2  + GAP * (BOARD_SIZE + 2)
 WINHEIGHT = SQUARE_SIZE * BOARD_SIZE + TOP_MARGIN + GAP * (BOARD_SIZE + 2) + BOTTOM_MARGIN
 
 # colors
-BACKGROUND = (255,165,0) # orange
+BACKGROUND = (255, 165, 0) # orange
 GREEN = (0, 255, 0)
-DGREEN = (50,205,50) # lime green
-PURPLE = (153,50,204) # dark orchid
+DGREEN = (50, 205, 50) # lime green
+PURPLE = (153, 50, 204) # dark orchid
 RED = (255, 0, 0)
 FILLED = (64, 224, 208) # turquoise
 EMPTY =  (192, 192, 192) # light grey
@@ -23,7 +23,7 @@ WHITE = (248, 248, 255)
 TEXTCOLOR = (0, 0, 0)
 BLACK = TEXTCOLOR
 
-cols = [[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],\
+cols = [[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK], \
 [BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK], \
 [BLACK, WHITE, DGREEN, BLACK, DGREEN, BLACK, DGREEN, BLACK, WHITE, BLACK], \
 [BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK], \
@@ -103,7 +103,7 @@ def main():
             else:
                 endOfGame = FONT.render('You won', True, TEXTCOLOR)
 
-            WIN.blit(endOfGame, (MARGINX,30))
+            WIN.blit(endOfGame, (MARGINX, 30))
             WIN.blit(FONT.render('Press Enter to start again', True, TEXTCOLOR), (MARGINX, 60))
         
         pygame.display.update()
@@ -119,8 +119,8 @@ def which(m, val):
     # find indeces of val in a matrix m
     for i in xrange(m.shape[0]):
         for j in xrange(m.shape[1]):
-            if m[i,j] == val:
-                return (i,j)
+            if m[i, j] == val:
+                return (i, j)
     return (None, None)
 
 def initBoard(dim):
@@ -131,11 +131,11 @@ def drawBoard(board):
     # draw board
     for i in xrange(board.shape[0]):
         for j in xrange(board.shape[1]):
-            if board[i,j] == 0 :
+            if board[i, j] == 0 :
                 col = EMPTY
             else:
                 col = cols[j][i]
-            left, top = leftTopCoordsOfBox(i,j)
+            left, top = leftTopCoordsOfBox(i, j)
             pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE))
             pygame.draw.rect(WIN, BLACK, (left, top, SQUARE_SIZE, SQUARE_SIZE), 1)
     if numpy.amax(board) > 0:
@@ -157,7 +157,7 @@ def getBoxAtPixel(board, x, y):
         for boxy in xrange(BOARD_SIZE):
             left, top = leftTopCoordsOfBox(boxx, boxy)
             boxRect = pygame.Rect(left, top, SQUARE_SIZE, SQUARE_SIZE)
-            if boxRect.collidepoint(x,y):
+            if boxRect.collidepoint(x, y):
                 return(boxx, boxy)
     return(None, None)
 
@@ -168,13 +168,13 @@ def drawHighlightedBox(boxx, boxy, col):
 
 def manhattanDist(box1, box2):
     # calculates manhattan distance between two boxes on the board
-    # box1, box2 tuples of (x,y) coordinates
+    # box1, box2 tuples of (x, y) coordinates
     return math.fabs(box1[0]-box2[0]) + math.fabs(box1[1]-box2[1])
 
 def nextPossibleMoves(board):
     boxx, boxy = which(board, numpy.amax(board))
-    next = [(boxx + 3, boxy),(boxx, boxy+3),(boxx-3, boxy),(boxx, boxy-3),\
-    (boxx-2,boxy+2),(boxx+2,boxy+2),(boxx+2,boxy-2),(boxx-2, boxy -2)]
+    next = [(boxx + 3, boxy), (boxx, boxy+3), (boxx-3, boxy), (boxx, boxy-3),\
+    (boxx-2, boxy+2), (boxx+2, boxy+2), (boxx+2, boxy-2), (boxx-2, boxy -2)]
     invalid = []
 
     for i in next:
@@ -183,7 +183,7 @@ def nextPossibleMoves(board):
     next = list(set(next) - set(invalid))
     full = []
     for i in next:
-        if board[i[0],i[1]] != 0:
+        if board[i[0], i[1]] != 0:
             full.append(i)
     return(list(set(next) - set(full)))
 
