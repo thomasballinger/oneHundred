@@ -116,13 +116,14 @@ def main():
         FPSCLOCK.tick(FPS)
 
 
-
 # functions
 
 def which(m, val):
-    # m is a matrix
-    # val is a value
-    # find indeces of val in a matrix m
+    """Returns first (i, j) index at where val is found
+
+    m is a matrix
+    val is a value
+    """
     for i in xrange(m.shape[0]):
         for j in xrange(m.shape[1]):
             if m[i, j] == val:
@@ -131,12 +132,12 @@ def which(m, val):
 
 
 def initBoard(dim):
-    # initialize board
+    """initialize board"""
     return numpy.zeros(shape=(dim, dim), dtype = numpy.int)
 
 
 def drawBoard(board):
-    # draw board
+    """draw board"""
     for i in xrange(board.shape[0]):
         for j in xrange(board.shape[1]):
             if board[i, j] == 0:
@@ -153,14 +154,14 @@ def drawBoard(board):
 
 
 def leftTopCoordsOfBox(boxx, boxy):
-    # convert board coordinates into pixel coordinates
+    """Returns pixel coordinates given board coordinates"""
     left = MARGINX + (boxx + 1) * GAP + boxx * SQUARE_SIZE  # boxx * (SQUARE_SIZE + GAP) + MARGINX + GAP
     top = TOP_MARGIN + (boxy + 1) * GAP + boxy * SQUARE_SIZE  # boxy * (SQUARE_SIZE + GAP) + TOP_MARGIN + GAP
     return(left, top)
 
 
 def getBoxAtPixel(board, x, y):
-    # get board coordinates given pixel coordinates
+    """Returns board coordinates given pixel coordinates"""
     BOARD_SIZE
     for boxx in xrange(BOARD_SIZE):
         for boxy in xrange(BOARD_SIZE):
@@ -177,8 +178,9 @@ def drawHighlightedBox(boxx, boxy, col):
 
 
 def manhattanDist(box1, box2):
-    # calculates manhattan distance between two boxes on the board
-    # box1, box2 tuples of (x, y) coordinates
+    """Returns manhattan distance between two boxes on the board
+
+    box1, box2 are tuples of (x, y) coordinates"""
     return math.fabs(box1[0]-box2[0]) + math.fabs(box1[1]-box2[1])
 
 
