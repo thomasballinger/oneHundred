@@ -77,7 +77,7 @@ class Display(object):
         self.fps_clock = pygame.time.Clock()
         pygame.display.set_caption(self.name)
 
-    def render(self, board):
+    def render(self, board, msg=''):
         """Update display with background image color or EMPTY
 
         board is a numpy array of ints.
@@ -108,6 +108,10 @@ class Display(object):
             color = self.on_box_hover(*self.current_box)
             if color:
                 self.draw_highlighted_box(*self.current_box + (color,))
+
+        if msg:
+            self.message(msg)
+
         pygame.display.update()
 
     def get_box_at_pixel(self, board, x, y):
@@ -144,8 +148,10 @@ class Display(object):
             pygame.draw.rect(self.win, GREEN, (left, top, self.square_size, self.square_size), 1)
 
     def message(self, msg):
-        text = FONT.render(msg, True, TEXTCOLOR)
-        WIN.blit(text, (MARGINX, 30))
+        """Displays up to three lines of text"""
+        for i, line in enumerate(msg.split('\n')):
+            text = self.font.render(line, True, TEXTCOLOR)
+            self.win.blit(text, (self.marginx, (i + 1) * 30))
 
 
 class Game(object):
@@ -193,6 +199,12 @@ class Game(object):
                 if x in xrange(self.board.shape[0]) and y in xrange(self.board.shape[1]) and
                 self.board[x, y] == 0]
 
+    def won(self):
+        return self.score == 100
+
+    def lost(self):
+        return len(self.next_possible_moves()) == 0 and not self.won()
+
 
 def main():
     board_size = 10
@@ -206,7 +218,7 @@ def main():
 
     def reset_if_game_over():
         """If there are no possible moves, reset the game"""
-        if len(board.next_possible_moves()) == 0:
+        if game.won() or game.lost():
             game.reset()
 
     display = Display(on_box_click=game.make_move,
@@ -221,19 +233,19 @@ def main():
                       top_margin=100,
                       bottom_margin=30)
 
+    start_again = '\nPress Enter to start again'
     while True:
-        display.render(game.board)
-
-        if len(game.next_possible_moves()) == 0:
-            if game.score < 100:
-                display.message('Game over, your score is ' + str(game.score))
-            else:
-                display.message('You won')
+        if game.lost():
+            msg = 'Game over, your score is ' + str(game.score) + start_again
+        elif game.won():
+            msg = 'You won' + start_again
+        else:
+            msg = ''
+        display.render(game.board, msg)
 
         display.fps_clock.tick(FPS)
 
 
-#WIN.blit(FONT.render('Press Enter to start again', True, TEXTCOLOR), (MARGINX, 60))
 # functions
 
 def spots(m):
