@@ -32,8 +32,10 @@ background = [
 FPS = 60
 BOARD_SIZE = 10
 
+
 class Display(object):
-    def __init__(self, on_box_click, on_box_hover, on_return, square_size, board_size, gap, marginx, top_margin, bottom_margin):
+    def __init__(self, on_box_click, on_box_hover, on_return, square_size,
+                 board_size, gap, marginx, top_margin, bottom_margin):
         """
 
         - on_box_click(x, y) is called when the user clicks a box
@@ -51,12 +53,19 @@ class Display(object):
         self.marginx = marginx
         self.top_margin = top_margin
         self.bottom_margin = bottom_margin
-        self.winwidth = square_size * board_size + marginx * 2 + gap * (board_size + 2)
-        self.winheight = square_size * board_size + top_margin + gap * (board_size + 2) + bottom_margin
-
         self.current_box = None
 
         self.setup()
+
+    @property
+    def winwidth(self):
+        return (self.square_size * self.board_size + self.marginx * 2 +
+                self.gap * (self.board_size + 2))
+
+    @property
+    def winheight(self):
+        return (self.square_size * self.board_size + self.top_margin +
+                self.gap * (self.board_size + 2) + self.bottom_margin)
 
     def setup(self):
         pygame.init()
