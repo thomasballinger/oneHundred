@@ -119,6 +119,7 @@ def main():
 # functions
 
 def spots(m):
+    """Generates pairs of locations and contents of numpy array m"""
     for i in xrange(m.shape[0]):
         for j in xrange(m.shape[1]):
             yield (i, j), m[i, j]
@@ -142,7 +143,7 @@ def init_board(dim):
 
 
 def draw_board(board):
-    """draw board"""
+    """draws board"""
     for (i, j), contents in spots(board):
         col = EMPTY if contents == 0 else contents
         left, top = left_top_coords_of_box(i, j)
@@ -189,16 +190,9 @@ def next_possible_moves(board):
     next = [(boxx+3, boxy), (boxx, boxy+3), (boxx-3, boxy), (boxx, boxy-3),
             (boxx-2, boxy+2), (boxx+2, boxy+2), (boxx+2, boxy-2), (boxx-2, boxy-2)]
     invalid = []
-
-    for i in next:
-        if (i[0] not in xrange(BOARD_SIZE)) or (i[1] not in xrange(BOARD_SIZE)):
-            invalid.append(i)
-    next = list(set(next) - set(invalid))
-    full = []
-    for i in next:
-        if board[i[0], i[1]] != 0:
-            full.append(i)
-    return(list(set(next) - set(full)))
+    return [(x, y) for x, y in next
+            if x in xrange(BOARD_SIZE) and y in xrange(BOARD_SIZE) and
+            board[x, y] == 0]
 
 
 if __name__ == '__main__':
