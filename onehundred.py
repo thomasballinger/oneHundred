@@ -1,4 +1,9 @@
-import pygame, sys, numpy, math
+import sys
+import math
+
+import numpy
+import pygame
+
 from pygame.locals import *
 
 # board size
