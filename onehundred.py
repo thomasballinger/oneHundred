@@ -8,33 +8,34 @@ GAP = 2
 MARGINX = 50
 TOP_MARGIN = 100
 BOTTOM_MARGIN = 30
-WINWIDTH = SQUARE_SIZE * BOARD_SIZE + MARGINX * 2  + GAP * (BOARD_SIZE + 2)
+WINWIDTH = SQUARE_SIZE * BOARD_SIZE + MARGINX * 2 + GAP * (BOARD_SIZE + 2)
 WINHEIGHT = SQUARE_SIZE * BOARD_SIZE + TOP_MARGIN + GAP * (BOARD_SIZE + 2) + BOTTOM_MARGIN
 
 # colors
-BACKGROUND = (255, 165, 0) # orange
+BACKGROUND = (255, 165, 0)  # orange
 GREEN = (0, 255, 0)
-DGREEN = (50, 205, 50) # lime green
-PURPLE = (153, 50, 204) # dark orchid
+DGREEN = (50, 205, 50)  # lime green
+PURPLE = (153, 50, 204)  # dark orchid
 RED = (255, 0, 0)
-FILLED = (64, 224, 208) # turquoise
-EMPTY =  (192, 192, 192) # light grey
+FILLED = (64, 224, 208)  # turquoise
+EMPTY = (192, 192, 192)  # light grey
 WHITE = (248, 248, 255)
 TEXTCOLOR = (0, 0, 0)
 BLACK = TEXTCOLOR
 
-cols = [[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK], \
-[BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK], \
-[BLACK, WHITE, DGREEN, BLACK, DGREEN, BLACK, DGREEN, BLACK, WHITE, BLACK], \
-[BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK], \
-[BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK], \
-[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK], \
-[WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, WHITE], \
-[WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE], \
-[BLACK, WHITE, BLACK, WHITE, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK], \
-[BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK]]
+cols = [
+    [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
+    [BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK],
+    [BLACK, WHITE, DGREEN, BLACK, DGREEN, BLACK, DGREEN, BLACK, WHITE, BLACK],
+    [BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE, BLACK],
+    [BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK],
+    [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
+    [WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, WHITE, WHITE, WHITE],
+    [WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, WHITE],
+    [BLACK, WHITE, BLACK, WHITE, BLACK, WHITE, BLACK, WHITE, BLACK, BLACK],
+    [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK]]
 
-FPS = 60 # 
+FPS = 60
 
 
 def main():
@@ -50,7 +51,7 @@ def main():
     pygame.display.set_caption('100')
 
     board = initBoard(BOARD_SIZE)
-    
+
     mousex = None
     mousey = None
 
@@ -61,7 +62,7 @@ def main():
         drawBoard(board)
 
         mouseClicked = False
-        
+
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -86,11 +87,11 @@ def main():
                 if mouseClicked:
                     score+= 1
                     board[boxx, boxy] = score
-                
+
             if score != 0 and board[boxx, boxy] == 0:
                 lastx, lasty = which(board, score)
                 if (boxx, boxy) in nextPossibleMoves(board):
-                    drawHighlightedBox(boxx, boxy, GREEN) 
+                    drawHighlightedBox(boxx, boxy, GREEN)
                     if mouseClicked:
                         score += 1
                         board[boxx, boxy] = score
@@ -105,7 +106,7 @@ def main():
 
             WIN.blit(endOfGame, (MARGINX, 30))
             WIN.blit(FONT.render('Press Enter to start again', True, TEXTCOLOR), (MARGINX, 60))
-        
+
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -123,15 +124,17 @@ def which(m, val):
                 return (i, j)
     return (None, None)
 
+
 def initBoard(dim):
     # initialize board
-    return numpy.zeros(shape = (dim, dim), dtype = numpy.int)
+    return numpy.zeros(shape=(dim, dim), dtype = numpy.int)
+
 
 def drawBoard(board):
     # draw board
     for i in xrange(board.shape[0]):
         for j in xrange(board.shape[1]):
-            if board[i, j] == 0 :
+            if board[i, j] == 0:
                 col = EMPTY
             else:
                 col = cols[j][i]
@@ -146,9 +149,10 @@ def drawBoard(board):
 
 def leftTopCoordsOfBox(boxx, boxy):
     # convert board coordinates into pixel coordinates
-    left = MARGINX + (boxx + 1) * GAP + boxx * SQUARE_SIZE # boxx * (SQUARE_SIZE + GAP) + MARGINX + GAP
-    top = TOP_MARGIN + (boxy + 1) * GAP + boxy * SQUARE_SIZE #boxy * (SQUARE_SIZE + GAP) + TOP_MARGIN + GAP
+    left = MARGINX + (boxx + 1) * GAP + boxx * SQUARE_SIZE  # boxx * (SQUARE_SIZE + GAP) + MARGINX + GAP
+    top = TOP_MARGIN + (boxy + 1) * GAP + boxy * SQUARE_SIZE  # boxy * (SQUARE_SIZE + GAP) + TOP_MARGIN + GAP
     return(left, top)
+
 
 def getBoxAtPixel(board, x, y):
     # get board coordinates given pixel coordinates
@@ -161,6 +165,7 @@ def getBoxAtPixel(board, x, y):
                 return(boxx, boxy)
     return(None, None)
 
+
 def drawHighlightedBox(boxx, boxy, col):
     left, top = leftTopCoordsOfBox(boxx, boxy)
     pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE), 5)
@@ -171,10 +176,11 @@ def manhattanDist(box1, box2):
     # box1, box2 tuples of (x, y) coordinates
     return math.fabs(box1[0]-box2[0]) + math.fabs(box1[1]-box2[1])
 
+
 def nextPossibleMoves(board):
     boxx, boxy = which(board, numpy.amax(board))
-    next = [(boxx + 3, boxy), (boxx, boxy+3), (boxx-3, boxy), (boxx, boxy-3),\
-    (boxx-2, boxy+2), (boxx+2, boxy+2), (boxx+2, boxy-2), (boxx-2, boxy -2)]
+    next = [(boxx + 3, boxy), (boxx, boxy+3), (boxx-3, boxy), (boxx, boxy-3),
+            (boxx-2, boxy+2), (boxx+2, boxy+2), (boxx+2, boxy-2), (boxx-2, boxy - 2)]
     invalid = []
 
     for i in next:
