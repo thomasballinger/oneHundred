@@ -17,7 +17,7 @@ WHITE = (248, 248, 255)
 BLACK = (0, 0, 0)
 TEXTCOLOR = BLACK
 
-background = [
+HACKERSCHOOL = [
     [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
     [BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK],
     [BLACK, WHITE, DGREEN, BLACK, DGREEN, BLACK, DGREEN, BLACK, WHITE, BLACK],
@@ -30,12 +30,12 @@ background = [
     [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK]]
 
 FPS = 60
-BOARD_SIZE = 10
 
 
 class Display(object):
-    def __init__(self, on_box_click, on_box_hover, on_return, square_size,
-                 board_size, gap, marginx, top_margin, bottom_margin):
+    def __init__(self, on_box_click, on_box_hover, on_return, background,
+                 square_size, board_size, gap, marginx, top_margin,
+                 bottom_margin):
         """
 
         - on_box_click(x, y) is called when the user clicks a box
@@ -46,6 +46,8 @@ class Display(object):
         self.on_box_click = on_box_click
         self.on_box_hover = on_box_hover
         self.on_return = on_return
+
+        self.background = background
 
         self.square_size = square_size
         self.board_size = board_size
@@ -127,7 +129,7 @@ class Display(object):
     def draw_board(self, board):
         """draws board"""
         for (i, j), contents in spots(board):
-            color = EMPTY if contents == 0 else background[i][j]
+            color = EMPTY if contents == 0 else self.background[i][j]
             left, top = self.left_top_coords_of_box(i, j)
             pygame.draw.rect(self.win, color, (left, top, self.square_size, self.square_size))
             pygame.draw.rect(self.win, BLACK, (left, top, self.square_size, self.square_size), 1)
@@ -152,7 +154,8 @@ class Game(object):
 
 
 def main():
-    game = Game(BOARD_SIZE)
+    board_size = 10
+    game = Game(board_size)
 
     def on_return():
         if len(next_possible_moves(game.board)) == 0:
@@ -183,8 +186,9 @@ def main():
     display = Display(on_box_click=on_box_click,
                       on_box_hover=on_box_hover,
                       on_return=on_return,
+                      background=HACKERSCHOOL,
                       square_size=30,
-                      board_size=10,
+                      board_size=board_size,
                       gap=2,
                       marginx=10,
                       top_margin=100,
@@ -241,7 +245,7 @@ def next_possible_moves(board):
     deltas = [(3, 0), (0, 3), (-3, 0), (0, -3),
               (-2, 2), (2, 2), (2, -2), (-2, -2)]
     return [(x, y) for x, y in [(boxx+dx, boxy+dy) for dx, dy in deltas]
-            if x in xrange(BOARD_SIZE) and y in xrange(BOARD_SIZE) and
+            if x in xrange(board.shape[0]) and y in xrange(board.shape[1]) and
             board[x, y] == 0]
 
 
