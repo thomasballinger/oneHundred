@@ -162,7 +162,6 @@ def leftTopCoordsOfBox(boxx, boxy):
 
 def getBoxAtPixel(board, x, y):
     """Returns board coordinates given pixel coordinates"""
-    BOARD_SIZE
     for boxx in xrange(BOARD_SIZE):
         for boxy in xrange(BOARD_SIZE):
             left, top = leftTopCoordsOfBox(boxx, boxy)
