@@ -33,13 +33,17 @@ FPS = 60
 BOARD_SIZE = 10
 
 class Display(object):
-    def __init__(self, on_box, on_return, square_size, board_size, gap, marginx, top_margin, bottom_margin):
+    def __init__(self, on_box_click, on_box_hover, on_return, square_size, board_size, gap, marginx, top_margin, bottom_margin):
         """
 
-        - on_box_click(x, y, click) is called when the user clicks a box
+        - on_box_click(x, y) is called when the user clicks a box
+        - on_box_hover(x, y) is called when the user hovers over a box,
+          and should return the color to highlight the box or None
         - on_return() is called when the user hits return
         """
-        self.on_box = on_box
+        self.on_box_click = on_box_click
+        self.on_box_hover = on_box_hover
+        self.on_return = on_return
 
         self.square_size = square_size
         self.board_size = board_size
@@ -50,7 +54,7 @@ class Display(object):
         self.winwidth = square_size * board_size + marginx * 2 + gap * (board_size + 2)
         self.winheight = square_size * board_size + top_margin + gap * (board_size + 2) + bottom_margin
 
-        self.current_highlighted_box = None
+        self.current_box = None
 
         self.setup()
 
@@ -74,25 +78,20 @@ class Display(object):
                 mousex, mousey = event.pos
                 boxx, boxy = self.get_box_at_pixel(board, mousex, mousey)
                 if boxx is not None and boxy is not None:
-                    highlight = self.on_box(boxx, boxy, click=False)
-                    if highlight is not None:
-                        self.current_highlighted_box = (boxx, boxy, highlight)
-                    else:
-                        self.current_highlighted_box = None
+                    self.current_box = (boxx, boxy)
             elif event.type == MOUSEBUTTONUP:
                 mousex, mousey = event.pos
                 boxx, boxy = self.get_box_at_pixel(board, mousex, mousey)
                 if boxx is not None and boxy is not None:
-                    highlight = self.on_box(boxx, boxy, click=True)
-                    if highlight is not None:
-                        self.current_highlighted_box = (boxx, boxy, highlight)
-                    else:
-                        self.current_highlighted_box = None
+                    self.current_box = (boxx, boxy)
+                    self.on_box_click(boxx, boxy)
             elif event.type == KEYDOWN and event.key == K_RETURN:
                 self.on_return()
 
-        if self.current_highlighted_box:
-            self.draw_highlighted_box(*self.current_highlighted_box)
+        if self.current_box:
+            color = self.on_box_hover(*self.current_box)
+            if color:
+                self.draw_highlighted_box(*self.current_box + (color,))
         pygame.display.update()
 
     def get_box_at_pixel(self, board, x, y):
@@ -151,24 +150,29 @@ def main():
             game.reset()
             game.score = 0
 
-    def on_box(boxx, boxy, click):
+    def on_box_click(boxx, boxy):
         if game.score == 0:
-            if click:
+            game.score += 1
+            game.board[boxx, boxy] = game.score
+        elif game.board[boxx, boxy] == 0:
+            lastx, lasty = which(game.board, game.score)
+            if (boxx, boxy) in next_possible_moves(game.board):
                 game.score += 1
                 game.board[boxx, boxy] = game.score
 
-        elif game.score != 0 and game.board[boxx, boxy] == 0:
-            lastx, lasty = which(game.board, game.score)
-            if (boxx, boxy) in next_possible_moves(game.board):
-                if click:
-                    game.score += 1
-                    game.board[boxx, boxy] = game.score
-                else:
-                    return GREEN
-            else:
-                return RED
+    def on_box_hover(boxx, boxy):
+        if game.score == 0:
+            return GREEN
+        lastx, lasty = which(game.board, game.score)
+        if game.board[boxx, boxy] != 0:
+            return None
+        if (boxx, boxy) in next_possible_moves(game.board):
+            return GREEN
+        else:
+            return RED
 
-    display = Display(on_box=on_box,
+    display = Display(on_box_click=on_box_click,
+                      on_box_hover=on_box_hover,
                       on_return=on_return,
                       square_size=30,
                       board_size=10,
