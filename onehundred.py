@@ -5,16 +5,6 @@ import pygame
 
 from pygame.locals import *
 
-# board size
-SQUARE_SIZE = 30
-BOARD_SIZE = 10
-GAP = 2
-MARGINX = 50
-TOP_MARGIN = 100
-BOTTOM_MARGIN = 30
-WINWIDTH = SQUARE_SIZE * BOARD_SIZE + MARGINX * 2 + GAP * (BOARD_SIZE + 2)
-WINHEIGHT = SQUARE_SIZE * BOARD_SIZE + TOP_MARGIN + GAP * (BOARD_SIZE + 2) + BOTTOM_MARGIN
-
 # colors
 BACKGROUND = (255, 165, 0)  # orange
 GREEN = (0, 255, 0)
@@ -27,7 +17,7 @@ WHITE = (248, 248, 255)
 BLACK = (0, 0, 0)
 TEXTCOLOR = BLACK
 
-cols = [
+background = [
     [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK],
     [BLACK, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK],
     [BLACK, WHITE, DGREEN, BLACK, DGREEN, BLACK, DGREEN, BLACK, WHITE, BLACK],
@@ -40,32 +30,41 @@ cols = [
     [BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK]]
 
 FPS = 60
+BOARD_SIZE = 10
 
+class Display(object):
+    def __init__(self, on_box, on_return, square_size, board_size, gap, marginx, top_margin, bottom_margin):
+        """
 
-def main():
-    global WIN, FPSCLOCK
+        - on_box_click(x, y, click) is called when the user clicks a box
+        - on_return() is called when the user hits return
+        """
+        self.on_box = on_box
 
-    pygame.init()
+        self.square_size = square_size
+        self.board_size = board_size
+        self.gap = gap
+        self.marginx = marginx
+        self.top_margin = top_margin
+        self.bottom_margin = bottom_margin
+        self.winwidth = square_size * board_size + marginx * 2 + gap * (board_size + 2)
+        self.winheight = square_size * board_size + top_margin + gap * (board_size + 2) + bottom_margin
 
-    FONT = pygame.font.Font('freesansbold.ttf', 20)
+        self.current_highlighted_box = None
 
-    WIN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
-    FPSCLOCK = pygame.time.Clock()
+        self.setup()
 
-    pygame.display.set_caption('100')
+    def setup(self):
+        pygame.init()
+        self.font = pygame.font.Font('freesansbold.ttf', 20)
+        self.win = pygame.display.set_mode((self.winwidth, self.winheight))
+        self.fps_clock = pygame.time.Clock()
+        pygame.display.set_caption('100')
 
-    board = init_board(BOARD_SIZE)
-
-    mousex = None
-    mousey = None
-
-    score = 0
-
-    while True:
-        WIN.fill(BACKGROUND)
-        draw_board(board)
-
-        mouse_clicked = False
+    def render(self, board):
+        """"""
+        self.win.fill(BACKGROUND)
+        self.draw_board(board)
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -73,48 +72,124 @@ def main():
                 sys.exit()
             elif event.type == MOUSEMOTION:
                 mousex, mousey = event.pos
+                boxx, boxy = self.get_box_at_pixel(board, mousex, mousey)
+                if boxx is not None and boxy is not None:
+                    highlight = self.on_box(boxx, boxy, click=False)
+                    if highlight is not None:
+                        self.current_highlighted_box = (boxx, boxy, highlight)
+                    else:
+                        self.current_highlighted_box = None
             elif event.type == MOUSEBUTTONUP:
                 mousex, mousey = event.pos
-                mouse_clicked = True
+                boxx, boxy = self.get_box_at_pixel(board, mousex, mousey)
+                if boxx is not None and boxy is not None:
+                    highlight = self.on_box(boxx, boxy, click=True)
+                    if highlight is not None:
+                        self.current_highlighted_box = (boxx, boxy, highlight)
+                    else:
+                        self.current_highlighted_box = None
             elif event.type == KEYDOWN and event.key == K_RETURN:
-                if len(next_possible_moves(board)) == 0:
-                    score = 0
-                    board = init_board(BOARD_SIZE)
-                    draw_board(board)
-                    boxx, boxy = None, None
+                self.on_return()
 
-        boxx, boxy = get_box_at_pixel(board, mousex, mousey)
-
-        if boxx is not None and boxy is not None:
-
-            if score == 0:
-                if mouse_clicked:
-                    score += 1
-                    board[boxx, boxy] = score
-
-            if score != 0 and board[boxx, boxy] == 0:
-                lastx, lasty = which(board, score)
-                if (boxx, boxy) in next_possible_moves(board):
-                    draw_highlighted_box(boxx, boxy, GREEN)
-                    if mouse_clicked:
-                        score += 1
-                        board[boxx, boxy] = score
-                else:
-                    draw_highlighted_box(boxx, boxy, RED)
-
-        if len(next_possible_moves(board)) == 0:
-            if score < 100:
-                end_of_game = FONT.render('Game over, your score is ' + str(score), True, TEXTCOLOR)
-            else:
-                end_of_game = FONT.render('You won', True, TEXTCOLOR)
-
-            WIN.blit(end_of_game, (MARGINX, 30))
-            WIN.blit(FONT.render('Press Enter to start again', True, TEXTCOLOR), (MARGINX, 60))
-
+        if self.current_highlighted_box:
+            self.draw_highlighted_box(*self.current_highlighted_box)
         pygame.display.update()
-        FPSCLOCK.tick(FPS)
+
+    def get_box_at_pixel(self, board, x, y):
+        """Returns board coordinates given pixel coordinates"""
+        rects = (((i, j), pygame.Rect(*self.left_top_coords_of_box(i, j) +
+                                      (self.square_size, self.square_size)))
+                 for i in xrange(self.board_size)
+                 for j in xrange(self.board_size))
+        for (boxx, boxy), box_rect in rects:
+            if box_rect.collidepoint(x, y):
+                return(boxx, boxy)
+        return(None, None)
+
+    def draw_highlighted_box(self, boxx, boxy, col):
+        left, top = self.left_top_coords_of_box(boxx, boxy)
+        pygame.draw.rect(self.win, col, (left, top, self.square_size, self.square_size), 5)
+
+    def left_top_coords_of_box(self, boxx, boxy):
+        """Returns pixel coordinates given board coordinates"""
+        left = self.marginx + (boxx + 1) * self.gap + boxx * self.square_size  # boxx * (SQUARE_SIZE + GAP) + MARGINX + GAP
+        top = self.top_margin + (boxy + 1) * self.gap + boxy * self.square_size  # boxy * (SQUARE_SIZE + GAP) + TOP_MARGIN + GAP
+        return(left, top)
+
+    def draw_board(self, board):
+        """draws board"""
+        for (i, j), contents in spots(board):
+            color = EMPTY if contents == 0 else background[i][j]
+            left, top = self.left_top_coords_of_box(i, j)
+            pygame.draw.rect(self.win, color, (left, top, self.square_size, self.square_size))
+            pygame.draw.rect(self.win, BLACK, (left, top, self.square_size, self.square_size), 1)
+        if numpy.amax(board) > 0:
+            boxx, boxy = which(board, numpy.amax(board))
+            left, top = self.left_top_coords_of_box(boxx, boxy)
+            pygame.draw.rect(self.win, GREEN, (left, top, self.square_size, self.square_size), 1)
+
+    def message(self, msg):
+        text = FONT.render(msg, True, TEXTCOLOR)
+        WIN.blit(text, (MARGINX, 30))
 
 
+class Game(object):
+    def __init__(self, board_size):
+        self.board_size = board_size
+        self.reset()
+
+    def reset(self):
+        self.score = 0
+        self.board = init_board(self.board_size)
+
+
+def main():
+    game = Game(BOARD_SIZE)
+
+    def on_return():
+        if len(next_possible_moves(game.board)) == 0:
+            game.reset()
+            game.score = 0
+
+    def on_box(boxx, boxy, click):
+        if game.score == 0:
+            if click:
+                game.score += 1
+                game.board[boxx, boxy] = game.score
+
+        elif game.score != 0 and game.board[boxx, boxy] == 0:
+            lastx, lasty = which(game.board, game.score)
+            if (boxx, boxy) in next_possible_moves(game.board):
+                if click:
+                    game.score += 1
+                    game.board[boxx, boxy] = game.score
+                else:
+                    return GREEN
+            else:
+                return RED
+
+    display = Display(on_box=on_box,
+                      on_return=on_return,
+                      square_size=30,
+                      board_size=10,
+                      gap=2,
+                      marginx=10,
+                      top_margin=100,
+                      bottom_margin=30)
+
+    while True:
+        display.render(game.board)
+
+        if len(next_possible_moves(game.board)) == 0:
+            if game.score < 100:
+                display.message('Game over, your score is ' + str(game.score))
+            else:
+                display.message('You won')
+
+        display.fps_clock.tick(FPS)
+
+
+#WIN.blit(FONT.render('Press Enter to start again', True, TEXTCOLOR), (MARGINX, 60))
 # functions
 
 def spots(m):
@@ -139,43 +214,6 @@ def which(m, val):
 def init_board(dim):
     """initialize board"""
     return numpy.zeros(shape=(dim, dim), dtype=numpy.int)
-
-
-def draw_board(board):
-    """draws board"""
-    for (i, j), contents in spots(board):
-        col = EMPTY if contents == 0 else contents
-        left, top = left_top_coords_of_box(i, j)
-        pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE))
-        pygame.draw.rect(WIN, BLACK, (left, top, SQUARE_SIZE, SQUARE_SIZE), 1)
-    if numpy.amax(board) > 0:
-        boxx, boxy = which(board, numpy.amax(board))
-        left, top = left_top_coords_of_box(boxx, boxy)
-        pygame.draw.rect(WIN, GREEN, (left, top, SQUARE_SIZE, SQUARE_SIZE), 1)
-
-
-def left_top_coords_of_box(boxx, boxy):
-    """Returns pixel coordinates given board coordinates"""
-    left = MARGINX + (boxx + 1) * GAP + boxx * SQUARE_SIZE  # boxx * (SQUARE_SIZE + GAP) + MARGINX + GAP
-    top = TOP_MARGIN + (boxy + 1) * GAP + boxy * SQUARE_SIZE  # boxy * (SQUARE_SIZE + GAP) + TOP_MARGIN + GAP
-    return(left, top)
-
-
-def get_box_at_pixel(board, x, y):
-    """Returns board coordinates given pixel coordinates"""
-    rects = (((i, j), pygame.Rect(*left_top_coords_of_box(i, j) +
-                                  (SQUARE_SIZE, SQUARE_SIZE)))
-             for i in xrange(BOARD_SIZE)
-             for j in xrange(BOARD_SIZE))
-    for (boxx, boxy), box_rect in rects:
-        if box_rect.collidepoint(x, y):
-            return(boxx, boxy)
-    return(None, None)
-
-
-def draw_highlighted_box(boxx, boxy, col):
-    left, top = left_top_coords_of_box(boxx, boxy)
-    pygame.draw.rect(WIN, col, (left, top, SQUARE_SIZE, SQUARE_SIZE), 5)
 
 
 def manhattan_dist(box1, box2):
