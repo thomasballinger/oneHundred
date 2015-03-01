@@ -187,10 +187,9 @@ def manhattan_dist(box1, box2):
 
 def next_possible_moves(board):
     boxx, boxy = which(board, numpy.amax(board))
-    next = [(boxx+3, boxy), (boxx, boxy+3), (boxx-3, boxy), (boxx, boxy-3),
-            (boxx-2, boxy+2), (boxx+2, boxy+2), (boxx+2, boxy-2), (boxx-2, boxy-2)]
-    invalid = []
-    return [(x, y) for x, y in next
+    deltas = [(3, 0), (0, 3), (-3, 0), (0, -3),
+              (-2, 2), (2, 2), (2, -2), (-2, -2)]
+    return [(x, y) for x, y in [(boxx+dx, boxy+dy) for dx, dy in deltas]
             if x in xrange(BOARD_SIZE) and y in xrange(BOARD_SIZE) and
             board[x, y] == 0]
 
