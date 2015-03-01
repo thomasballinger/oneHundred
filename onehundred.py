@@ -85,11 +85,11 @@ def main():
 
         boxx, boxy = get_box_at_pixel(board, mousex, mousey)
 
-        if boxx != None and boxy != None:
+        if boxx is not None and boxy is not None:
 
             if score == 0:
                 if mouse_clicked:
-                    score+= 1
+                    score += 1
                     board[boxx, boxy] = score
 
             if score != 0 and board[boxx, boxy] == 0:
