@@ -246,8 +246,6 @@ def main():
         display.fps_clock.tick(FPS)
 
 
-# functions
-
 def spots(m):
     """Generates pairs of locations and contents of numpy array m"""
     for i in xrange(m.shape[0]):
