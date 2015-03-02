@@ -2,6 +2,7 @@ import sys
 
 import numpy
 import pygame
+from itertools import izip
 
 from pygame.locals import *
 
@@ -228,7 +229,11 @@ def main():
         if game.won() or game.lost():
             game.reset()
 
-    display = Display(on_box_click=game.make_move,
+    def make_move(boxx, boxy):
+        game.make_move(boxx, boxy)
+        game.solvable = get_solvable_gen(game, 1000)
+
+    display = Display(on_box_click=make_move,
                       on_box_hover=box_color,
                       on_return=reset_if_game_over,
                       background=HACKERSCHOOL,
@@ -241,16 +246,25 @@ def main():
                       bottom_margin=30)
 
     start_again = '\nPress Enter to start again'
+
+    game.solvable = get_solvable_gen(game, 1000)
+    game_is_solvable = None
+
     while True:
         if game.lost():
             msg = 'Game over, your score is ' + str(game.score) + start_again
         elif game.won():
             msg = 'You won' + start_again
+        elif game_is_solvable is True:
+            msg = 'Good move!'
+        elif game_is_solvable is False:
+            msg = "Ha ha, it's impossible now"
         else:
             msg = ''
-        display.render(game.board, msg)
 
-        display.fps_clock.tick(FPS)
+        display.render(game.board, msg)
+        for game_is_solvable in game.solvable:
+            break
 
 
 def spots(m):
@@ -284,35 +298,54 @@ def manhattan_dist(box1, box2):
     return abs(box1[0]-box2[0]) + abs(box1[1]-box2[1])
 
 
-def game_copy(game, x, y):
+def game_copy(game):
     g = Game(game.board_size)
     g.score = game.score
     g.board = game.board.copy()
     return g
 
 
-tries = 0
-
-
 def solve(game):
     """Returns a list of moves which would win, or None if impossible"""
-    global tries
-    tries += 1
-    if not tries % 10000:
-        print tries
     if game.won():
-        return []
+        yield []
+        return
     moves = game.next_possible_moves()
     for move in moves:
         game._make_move(*move)
-        result = solve(game)
+        s = solve(game)
+        result = None
+        for result in s:
+            yield result
         game.board[move] = 0
         game.score -= 1
         if result is not None:
-            return [move] + result
-    return None
+            yield [move] + result
+            return
+        yield
+    return
+
+
+def get_solvable_gen(game, every=100):
+    """Generator which yields True, False or None if undecided
+
+    every is how many calculations to allow before interrupting calculations"""
+    copy = game_copy(game)
+    g = solve(copy)
+    result = None
+    while True:
+        for _ in xrange(every):
+            try:
+                result = next(g)
+            except StopIteration:
+                if result is None:
+                    yield False
+                else:
+                    print 'move that would lead to a solution:', result[:1]
+                    yield True
+                return
+        yield None
 
 
 if __name__ == '__main__':
-    print solve(Game(5))
-    #main()
+    main()
